@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Collapsible, Icon } from '@wordpress/ui';
-import { chevronDown, mobile, update, trash, search } from '@wordpress/icons';
+import { chevronDown, mobile, update, trash, search, layout } from '@wordpress/icons';
 import { ActionRow } from './ActionRow';
 import { InlineConfirm } from './InlineConfirm';
-import { runAction, toggleQueryMonitor } from '../lib/actions';
+import { usePrefs } from '../hooks/usePrefs';
+import { runAction, toggleQueryMonitor, applyBlockInspectorPref } from '../lib/actions';
 
 const OPEN_KEY = 'wp_devtools_open';
 
 export function DevTools({ origin, url, hasQueryMonitor = false }) {
 	const [open, setOpen] = useState(false);
 	const [hydrated, setHydrated] = useState(false);
+	const [prefs, savePref] = usePrefs(origin);
 
 	useEffect(() => {
 		chrome.storage.local.get(OPEN_KEY).then((data) => {
@@ -21,6 +23,11 @@ export function DevTools({ origin, url, hasQueryMonitor = false }) {
 	const handleOpenChange = (next) => {
 		setOpen(next);
 		chrome.storage.local.set({ [OPEN_KEY]: next });
+	};
+
+	const toggleBlockInspector = async (enabled) => {
+		await savePref('blockInspectorEnabled', enabled);
+		await applyBlockInspectorPref(enabled);
 	};
 
 	// Wait for the persisted open/closed state to load so the panel doesn't
@@ -37,6 +44,10 @@ export function DevTools({ origin, url, hasQueryMonitor = false }) {
 			</Collapsible.Trigger>
 			<Collapsible.Panel className="wpd-devtools__panel">
 				<div className="wpd-devtools__items">
+					<BlockInspectorToggle
+						checked={!!prefs.blockInspectorEnabled}
+						onChange={toggleBlockInspector}
+					/>
 					<ActionRow
 						icon={mobile}
 						label="Preview mobile size"
@@ -63,5 +74,27 @@ export function DevTools({ origin, url, hasQueryMonitor = false }) {
 				</div>
 			</Collapsible.Panel>
 		</Collapsible.Root>
+	);
+}
+
+function BlockInspectorToggle({ checked, onChange }) {
+	return (
+		<div className="wpd-card-row wpd-toggle-row">
+			<button
+				type="button"
+				role="switch"
+				aria-checked={checked}
+				className="wpd-card__main"
+				onClick={() => onChange(!checked)}
+			>
+				<span className="wpd-card__icon" aria-hidden="true">
+					<Icon icon={layout} size={20} />
+				</span>
+				<span className="wpd-card__label">Highlight blocks</span>
+				<span className={`wpd-switch ${checked ? 'is-on' : ''}`} aria-hidden="true">
+					<span className="wpd-switch__thumb" />
+				</span>
+			</button>
+		</div>
 	);
 }
