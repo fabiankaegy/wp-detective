@@ -15,6 +15,7 @@ import { DevTools } from './DevTools';
 import { NewContent } from './NewContent';
 import { PluginActions } from './PluginActions';
 import { InlineConfirm } from './InlineConfirm';
+import { SiteInfoPanel } from './SiteInfoPanel';
 import { usePrefs } from '../hooks/usePrefs';
 import { runAction, applyAdminBarPref, requestRestEditUrl } from '../lib/actions';
 import { editLabel, editDisabledLabel, postTypeLabel } from '../lib/labels';
@@ -75,6 +76,7 @@ export function DetectedView({ result, host }) {
 			{isLoggedIn && ctx.pluginMenuItems?.length > 0 && (
 				<PluginActions items={ctx.pluginMenuItems} onOpen={openUrl} />
 			)}
+			<SiteInfoPanel ctx={ctx} origin={origin} onOpen={openUrl} />
 			{!isWpAdmin && (
 				<DevTools origin={origin} url={url} hasQueryMonitor={!!ctx.hasQueryMonitor} />
 			)}
